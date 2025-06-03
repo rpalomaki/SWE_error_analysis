@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from constants import *
 
 # Line of sight deformation
 
-def land_surface_deformation(delta_R, wavelength = Lambda):
+def land_surface_deformation(delta_R, wavelength = nisar_wavelength):
     """
     Phase change as a result of line of sight deformation (delta_R)
     """
@@ -11,7 +12,7 @@ def land_surface_deformation(delta_R, wavelength = Lambda):
 
 # Ionosphere
 
-def ionospheric_advance(delta_TEC, K = 40.28, wavelength = Lambda, c = 3e8):
+def ionospheric_advance(delta_TEC, K = 40.28, wavelength = nisar_wavelength, c = 3e8):
     """
     Phase change as a result of ionospheric Total Electron Count changes (delta_TEC), wavelength, and speed of light. 
     
@@ -21,10 +22,10 @@ def ionospheric_advance(delta_TEC, K = 40.28, wavelength = Lambda, c = 3e8):
 
 # Atmosphere
 
-def dry_atmosphere(delta_P_z_from_zref, Rd = 287.05, g = 9.81, k1 = 0.776, incidence_angle = np.deg2rad(main_inc_angle), wavelength = Lambda):
+def dry_atmosphere(delta_P_z_from_zref, Rd = 287.05, g = 9.81, k1 = 0.776, incidence_angle = np.deg2rad(main_inc_angle), wavelength = nisar_wavelength):
     return (4 * np.pi / wavelength) * 1e-6 * k1 * Rd / (np.cos(incidence_angle) * g) * delta_P_z_from_zref
 
-def precipitable_water(PW, incidence_angle = np.deg2rad(main_inc_angle), wavelength = Lambda):
+def precipitable_water(PW, incidence_angle = np.deg2rad(main_inc_angle), wavelength = nisar_wavelength):
     return 4 * np.pi / wavelength * 6.5 * PW / np.cos(incidence_angle)
 
 # Soil Moisture
@@ -71,7 +72,7 @@ def complex_e_1_4GHz(mv, S, C):
     # subtract imaginary part to get realistic values
     return real_part_1_4GHz(S, C, mv) - 1j * imaginary_part_1_4GHz(S, C, mv)
 
-def soil_vertical_wave_number_from_permittivity(e_prime, wavelength = Lambda, magnetic_permeability = 1.0, incidence_angle = np.deg2rad(main_inc_angle)):
+def soil_vertical_wave_number_from_permittivity(e_prime, wavelength = nisar_wavelength, magnetic_permeability = 1.0, incidence_angle = np.deg2rad(main_inc_angle)):
     """
     Equation 5 from De Zan et al. (2014)
     Digital Object Identifier 10.1109/TGRS.2013.2241069
@@ -117,7 +118,7 @@ def v_h20(T, T_melt = 2):
     if T > 0: return 1
     else: return np.exp(T/T_melt)
 
-def e_ice(T, wavelength = Lambda):
+def e_ice(T, wavelength = nisar_wavelength):
     """
     Ice's permittivity as a function of wavelength and temperature. 
 
@@ -141,14 +142,14 @@ def e_ice(T, wavelength = Lambda):
 
     return real - 1j*imaj
 
-def e_h20(T, S = 0, wavelength = Lambda):
+def e_h20(T, S = 0, wavelength = nisar_wavelength):
     """
     Water's permitivitty as a function of wavelength, temperature, and salinity (S)
 
     From Klein et al. (1997)'s Equation 5, 8, 17.
     simplified by assumption of no salinity and low frequency
     """
-    f = 3e8 / Lambda
+    f = 3e8 / nisar_wavelength
     f = 1.4e9
     # e infinite for distlled water (paragraph below equation 7)
     e_inf = 4.9 # 20% error

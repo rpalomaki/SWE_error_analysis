@@ -1,10 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from non_snow_retrievals import phase_from_soil_moisture
+from constants import *
 
 ### Snow water equivalent 
 
-def phase_from_swe(delta_swe, incidence_angle = np.deg2rad(main_inc_angle), alpha = alpha, wavelength = Lambda):
+def phase_from_swe(delta_swe, incidence_angle = np.deg2rad(main_inc_angle), alpha = alpha, wavelength = nisar_wavelength):
     """
     Equation 18 from Leinss et al. (2015). Digital Object Identifier 10.1109/JSTARS.2015.2432031.
 
@@ -16,7 +17,7 @@ def phase_from_swe(delta_swe, incidence_angle = np.deg2rad(main_inc_angle), alph
     
     return 2 * ki * alpha / 2 * (1.59 + incidence_angle**(5/2)) * delta_swe
 
-def swe_from_phase(delta_phase, incidence_angle = np.deg2rad(main_inc_angle), alpha = alpha, wavelength = Lambda):
+def swe_from_phase(delta_phase, incidence_angle = np.deg2rad(main_inc_angle), alpha = alpha, wavelength = nisar_wavelength):
     """
     Equation 18 from Leinss et al. (2015) rearranged to give swe from phase. Digital Object Identifier 10.1109/JSTARS.2015.2432031.
 
@@ -40,7 +41,7 @@ def calc_soil_moisture_error(sand, clay, sm_series, timedelta=12):
 
     return [swe_from_phase(phase) for phase in soil_phase]
 
-def guneriussen_phase_from_depth(delta_d, epsilon, wavelength = Lambda, inc = np.deg2rad(40)):
+def guneriussen_phase_from_depth(delta_d, epsilon, wavelength = nisar_wavelength, inc = np.deg2rad(40)):
     """
     Equation 6 from Guneriussen et al. (2001). Publisher Item Identifier S 0196-2892(01)08843-X
 

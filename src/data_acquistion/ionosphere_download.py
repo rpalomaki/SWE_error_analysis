@@ -1,67 +1,51 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import re
-import cartopy.crs as ccrs
-import wget
+from pathlib import Path
+from urllib.parse import urljoin
+import shutil
+import os
 import subprocess
 
-# Larger figure size
-fig_size = [14, 10]
-plt.rcParams['figure.figsize'] = fig_size
+def get_ionex_filename(year, day, old_format, HHMM = '0000', TYP = 'FIN', TSMP = '02H', CNT = 'GIM', cente = 'esa', zipped = True):
+    """
+    Generates new and old format ionex filenames
 
-# https://github.com/daniestevez/jupyter_notebooks/blob/master/IONEX.ipynb
-def parse_map(tecmap, exponent = -1):
-    tecmap = re.split('.*END OF TEC MAP', tecmap)[0]
-    return np.stack([np.fromstring(l, sep=' ') for l in re.split('.*LAT/LON1/LON2/DLON/H\\n',tecmap)[1:]])*10**exponent
+    Old format is before GPS week 2237 (~ November 2022)
+    See: https://cddis.nasa.gov/Data_and_Derived_Products/GNSS/atmospheric_products.html#iono
+    """
+    if old_format:
+        ext = '.Z' if zipped else ''
+        return f'{cente}g{day:03d}0.{year%100:02d}i{ext}'
+    else:
+        ext = '.gz' if zipped else ''
+        return f'IGS0OPS{TYP}_{year:04d}{day:03d}{HHMM}_01D_{TSMP}_{CNT}.INX{ext}'
+
+def download_ionex(year, day, output_dir, center = 'esa'):
+    """
+    Downloads IONEX files from CDDIS at NASA.
+
+    Old format is before GPS week 2237 (~ November 2022)
+    See: https://cddis.nasa.gov/Data_and_Derived_Products/GNSS/atmospheric_products.html#iono
+
+    center is only used before GPS week 2237.
+    """
+    if isinstance(output_dir, str): output_dir = Path(output_dir)
+    if Path(output_dir.joinpath(get_ionex_filename(year, day, old_format = False, zipped = False))).exists(): return
+
+    old_format = True if year <= 2022 and day <= 330 else False
     
-def get_tecmaps(filename):
-    with open(filename) as f:
-        ionex = f.read()
-        return [parse_map(t) for t in ionex.split('START OF TEC MAP')[1:]]
+    main_https = 'https://cddis.nasa.gov/archive/gnss/products/ionex/'
+    filename = get_ionex_filename(year, day, old_format)
+    https_fp = urljoin(main_https, f'{year:04d}/{day:03d}/{filename}')
+    os.system(f'wget --auth-no-challenge -P {output_dir} "{https_fp}"')
+    subprocess.call(['gzip', '-d', output_dir.joinpath(filename)])
 
-def get_tec(tecmap, lat, lon):
-    i = round((87.5 - lat)*(tecmap.shape[0]-1)/(2*87.5))
-    j = round((180 + lon)*(tecmap.shape[1]-1)/360)
-    return tecmap[i,j]
-
-def ionex_filename(year, day, HHMM = '0000', TYP = 'FIN', TSMP = '02H', CNT = 'GIM', zipped = True):
-    # TSMP could be '02H' for every 2 hours or '01D' for every day
-    # TYP could be 'FIN' for final or 'RAP' for rapid solution
-    # CNT could be GIM for global ionospheric TEC maps or ROT (rate of TEC index maps)
-    if zipped == True: ext = '.gz'
-    else: ext = ''
-    return f'IGS0OPS{TYP}_{year:04d}{day:03d}{HHMM}_01D_{TSMP}_{CNT}.INX{ext}'
-    # return '{}g{:03d}0.{:02d}i{}'.format(centre, day, year % 100, '.Z' if zipped else '')
-
-def ionex_ftp_path(year, day):
-    return 'https://cddis.nasa.gov/archive/gnss/products/ionex/{:04d}/{:03d}/{}'.format(year, day, ionex_filename(year, day))
-    return 'ftp://cddis.gsfc.nasa.gov/gnss/products/ionex/{:04d}/{:03d}/{}'.format(year, day, ionex_filename(year, day, centre))
-
-def ionex_local_path(year, day, directory = '/tmp', zipped = False):
-    return directory + '/' + ionex_filename(year, day, zipped=zipped)
-
-import os
-def download_ionex(year, day, centre = 'esa', output_dir = '/tmp'):
-    os.system(f'wget --auth-no-challenge -P {output_dir} "{ionex_ftp_path(year, day)}"')
-    # wget.download(ionex_ftp_path(year, day, centre), output_dir)
-    subprocess.call(['gzip', '-d', ionex_local_path(year, day, output_dir, zipped = True)])
+    if old_format:
+        old_format_fp = output_dir.joinpath(get_ionex_filename(year, day, old_format, zipped = False))
+        new_format_fp = output_dir.joinpath(get_ionex_filename(year, day, old_format = False, zipped = False))
+        shutil.move(old_format_fp, new_format_fp)
     
-def plot_tec_map(tecmap):
-    proj = ccrs.PlateCarree()
-    f, ax = plt.subplots(1, 1, subplot_kw=dict(projection=proj))
-    ax.coastlines()
-    h = plt.imshow(tecmap, cmap='viridis', vmin=0, vmax=100, extent = (-180, 180, -87.5, 87.5), transform=proj)
-    plt.title('VTEC map')
-    divider = make_axes_locatable(ax)
-    ax_cb = divider.new_horizontal(size='5%', pad=0.1, axes_class=plt.Axes)
-    f.add_axes(ax_cb)
-    cb = plt.colorbar(h, cax=ax_cb)
-    plt.rc('text', usetex=True)
-    cb.set_label('TECU ($10^{16} \\mathrm{el}/\\mathrm{m}^2$)')
+    return output_dir.joinpath(get_ionex_filename(year, day, old_format = False, zipped = False))
 
-from tqdm import tqdm
 for year in range(2016, 2026):
     print(year)
-    for day in tqdm(range(1, 366)):
-        download_ionex(year, day, output_dir='/Users/rdcrlzh1/Documents/thp/data/ionosphere')
+    for day in range(1, 366):
+        download_ionex(year, day, output_dir = '/Users/rdcrlzh1/Documents/SWE_error_analysis/local/ionosphere')

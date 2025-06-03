@@ -98,6 +98,9 @@ def phase_soil_wave_number(e1_prime, e2_prime, magnetic_permeability = 1.0):
     kz2 = soil_vertical_wave_number_from_permittivity(e2_prime)
     return 1/(2*1j * kz1 - 2* 1j * np.conj(kz2))
 
+def phase_from_soil_moisture(sand, clay, sm1, sm2):
+    return np.angle(phase_soil_wave_number(e1_prime = complex_e_1_4GHz(S = sand, C = clay, mv = sm1), e2_prime=complex_e_1_4GHz(S = sand, C = clay, mv = sm2)))
+
 # Vegetation Freezing
 
 def v_h20(T, T_melt = 2):

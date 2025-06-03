@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from non_snow_retrievals import phase_from_soil_moisture
 
 ### Snow water equivalent 
 
@@ -27,6 +28,17 @@ def swe_from_phase(delta_phase, incidence_angle = np.deg2rad(main_inc_angle), al
     # simplified the 2 * ki / 2 to just ki
     
     return 2 * delta_phase / ( 2 * ki * alpha * (1.59 + incidence_angle**(5/2)))
+
+def calc_soil_moisture_error(sand, clay, sm_series, timedelta=12):
+    soil_phase = []
+    for i, sm2 in enumerate(sm_series):
+        try:
+            sm1 = sm_series.iloc[i-timedelta]
+            soil_phase.append(float(phase_from_soil_moisture(sand=sand, clay=clay, sm1=sm1, sm2=sm2)))
+        except IndexError:
+            soil_phase.append(np.nan)
+
+    return [swe_from_phase(phase) for phase in soil_phase]
 
 def guneriussen_phase_from_depth(delta_d, epsilon, wavelength = Lambda, inc = np.deg2rad(40)):
     """

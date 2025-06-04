@@ -247,4 +247,10 @@ def canopy_permittivity(T, WC_wood = 0.3, e_air = 1.0006, h = 10):
     return e_air + ((ewood - e_air) * (ewood+ 5*e_air) * v_scc) / (3 * (ewood + e_air) - 2 * (ewood-e_air)  * v_scc)
 
 
+def vegetation_phase(H, epsilon_1, epsilon_2, wavelength = Lambda, inc = np.deg2rad(40)):
+    """
+    Equation 6 from Guneriussen et al. (2001). Publisher Item Identifier S 0196-2892(01)08843-X
 
+    Direct equation for phase change from snow depth change (delta_d, Z_s in paper), incidence angle, and permittivity.
+    """
+    return 4*np.pi/wavelength * H * (np.sqrt( epsilon_2 - np.sin(inc)**2) - np.sqrt( epsilon_1 - np.sin(inc)**2))

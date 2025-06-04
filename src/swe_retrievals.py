@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from non_snow_retrievals import phase_from_soil_moisture
+from non_snow_retrievals import phase_from_soil_moisture, canopy_permittivity, vegetation_phase
 from constants import *
 
 ### Snow water equivalent 
@@ -48,3 +48,16 @@ def guneriussen_phase_from_depth(delta_d, epsilon, wavelength = nisar_wavelength
     Direct equation for phase change from snow depth change (delta_d, Z_s in paper), incidence angle, and permittivity.
     """
     return 4*np.pi/wavelength * delta_d * (np.cos(inc) - np.sqrt( epsilon - np.sin(inc)**2))
+
+def calc_veg_permittivity_error(canopy_height, temperature_series, timedelta=12):
+    veg_phase = []
+    for i, t2 in enumerate(temperature_series):
+        try:
+            t1 = temperature_series.iloc[i-timedelta]
+            e2 = canopy_permittivity(T=t2, h=canopy_height)
+            e1 = canopy_permittivity(T=t1, h=canopy_height)
+            veg_phase.append(float(vegetation_phase(H=canopy_height, epsilon_1=e1, epsilon_2=e2)))
+        except IndexError:
+            veg_phase.append(np.nan)
+
+    return [swe_from_phase(phase) for phase in veg_phase]

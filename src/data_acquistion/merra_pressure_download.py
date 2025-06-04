@@ -19,7 +19,7 @@ def download_merra(year, month, output_dir):
     # filename = get_merra_name(year, month, day)
     # if output_dir.joinpath(filename).exists(): return output_dir.joinpath(filename)
 
-    main_https = 'https://goldsmr4.gesdisc.eosdis.nasa.gov/data/MERRA2/M2I1NXINT.5.12.4/'
+    main_https = 'https://goldsmr4.gesdisc.eosdis.nasa.gov/data/MERRA2/M2I1NXASM.5.12.4/'
     # filename = get_merra_name(year, month, day)
     https_fp = urljoin(main_https, f'{year:04d}/{month:02d}/')
     os.system(f'wget --load-cookies ~/.urs_cookies --save-cookies ~/.urs_cookies --keep-session-cookies -r -c -nH -nd -np -A nc4 --content-disposition -P {output_dir} "{https_fp}"')
@@ -34,4 +34,4 @@ for year in range(2016, 2026):
     print(year)
     for month in range(1, 13):
         # for day in range(1, 32):
-        download_merra(year, month, '/Users/rdcrlzh1/Documents/SWE_error_analysis/local/pw2')
+        download_merra(year, month, '/Users/rdcrlzh1/Documents/SWE_error_analysis/local/pressure')

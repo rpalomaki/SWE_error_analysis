@@ -1,2 +1,4 @@
 local/
 *.pyc
+*wget-log*
+*.DS_store

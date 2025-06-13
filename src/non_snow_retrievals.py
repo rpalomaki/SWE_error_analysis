@@ -26,6 +26,9 @@ def dry_atmosphere(delta_P_z_from_zref, Rd = 287.05, g = 9.81, k1 = 0.776, incid
     return (4 * np.pi / wavelength) * 1e-6 * k1 * Rd / (np.cos(incidence_angle) * g) * delta_P_z_from_zref
 
 def precipitable_water(PW, incidence_angle = np.deg2rad(main_inc_angle), wavelength = nisar_wavelength):
+    """
+    The approximate phase delay as a function of precipitable water vapor in atmosphere.
+    """
     return 4 * np.pi / wavelength * 6.5 * PW / np.cos(incidence_angle)
 
 # Soil Moisture

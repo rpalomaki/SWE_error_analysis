@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 import os
 import subprocess
 
+output_dir = '/data/pressure/'
 # def get_merra_name(year, month, day):
     # return f'MERRA2_401.inst1_2d_int_Nx.{year}{month:02d}{day:02d}.nc4'
 
@@ -29,9 +30,35 @@ def download_merra(year, month, output_dir):
 
 # https://goldsmr4.gesdisc.eosdis.nasa.gov/data/MERRA2/M2I1NXINT.5.12.4/2016/01/MERRA2_100.inst1_2d_int_Nx.20160102.nc4
 # https://goldsmr4.gesdisc.eosdis.nasa.gov/data/MERRA2/M2I1NXINT.5.12.4/2016/01/MERRA2_400.inst1_2d_int_Nx.20160101.nc4
-    # for year in range(2016, 2026):
+
 for year in range(2016, 2026):
     print(year)
     for month in range(1, 13):
         # for day in range(1, 32):
-        download_merra(year, month, '/Users/rdcrlzh1/Documents/SWE_error_analysis/local/pressure')
+        download_merra(year, month, output_dir)
+
+# year = 2022
+# for month in range(9, 13):
+#     download_merra(year, month, '/data/pressure')
+
+# year = 2023
+# for month in range(1, 8):
+#     download_merra(year, month, '/data/pressure')
+
+import xarray as xr
+from pathlib import Path
+
+fps = sorted(list(Path(output_dir).glob('*.nc4')))
+
+from tqdm import tqdm
+ams = []
+pms = []
+for fp in tqdm(fps):
+    ams.append(xr.open_dataset(fp)['PS'].isel(time = 12))
+    pms.append(xr.open_dataset(fp)['PS'].isel(time = 0))
+
+ams = xr.concat(ams, 'time')
+ams.to_netcdf(output_dir.joinpath('ams.nc'))
+
+pms = xr.concat(pms, 'time')
+pms.to_netcdf(output_dir.joinpath('pms.nc'))

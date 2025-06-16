@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from constants import *
+from constants import main_inc_angle, alpha, nisar_wavelength
 
 # Line of sight deformation
 

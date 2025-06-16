@@ -37,14 +37,6 @@ for year in range(2016, 2026):
         # for day in range(1, 32):
         download_merra(year, month, output_dir)
 
-# year = 2022
-# for month in range(9, 13):
-#     download_merra(year, month, '/data/pressure')
-
-# year = 2023
-# for month in range(1, 8):
-#     download_merra(year, month, '/data/pressure')
-
 import xarray as xr
 from pathlib import Path
 

@@ -35,3 +35,13 @@ for year in range(2016, 2026):
     for month in range(1, 13):
         # for day in range(1, 32):
         download_merra(year, month, '/Users/rdcrlzh1/Documents/SWE_error_analysis/local/pw2')
+
+pws = Path('/Users/rdcrlzh1/Documents/SWE_error_analysis/local/pw').glob('*.nc4')
+from tqdm import tqdm
+das = []
+for fp in tqdm(sorted(list(pws))):
+    try:
+        das.append(xr.open_dataset(fp)['TQV'].isel(time = 12))
+    except OSError: pass
+pw = xr.concat(das, 'time')
+pw.to_netcdf('/Users/rdcrlzh1/Documents/SWE_error_analysis/local/pw/pw.nc')

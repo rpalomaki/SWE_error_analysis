@@ -49,3 +49,29 @@ for year in range(2016, 2026):
     print(year)
     for day in range(1, 366):
         download_ionex(year, day, output_dir = '/Users/rdcrlzh1/Documents/SWE_error_analysis/local/ionosphere')
+
+def parse_map(tecmap, exponent = -1):
+    tecmap = re.split('.*END OF TEC MAP', tecmap)[0]
+    return np.stack([np.fromstring(l, sep=' ') for l in re.split('.*LAT/LON1/LON2/DLON/H\\n',tecmap)[1:]])*10**exponent
+    
+def get_tecmaps(filename):
+    with open(filename) as f:
+        ionex = f.read()
+        return [parse_map(t) for t in ionex.split('START OF TEC MAP')[1:]]
+
+ixs = sorted(list(Path('/Users/rdcrlzh1/Documents/SWE_error_analysis/local/ionosphere').glob('*.INX')))
+
+ion = np.zeros((len(ys), len(xs), len((ixs))))
+times = []
+for i, fp in enumerate(tqdm(ixs)):
+    time = pd.to_datetime(fp.stem.split('_')[1], format = '%Y%j0000')
+    times.append(time)
+    # 6 is 12 UTC or ~5-7am MT
+    ion[:, :, i] = get_tecmaps(fp)[6]
+
+xs = np.arange(-180.0, 185.0, 5.0)
+ys = np.arange(87.5, -89, -2.5)
+
+ion = xr.DataArray(ion, coords = {'y': ys, 'x': xs, 'time': times})
+output_dir = Path('/Users/rdcrlzh1/Documents/SWE_error_analysis/local/ionosphere')
+ion.to_netcdf(output_dir.joinpath('am_ion.nc'))

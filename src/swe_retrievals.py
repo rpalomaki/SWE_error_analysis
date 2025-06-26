@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from non_snow_retrievals import phase_from_soil_moisture, canopy_permittivity, vegetation_phase
+from non_snow_retrievals import *
 from constants import *
 
 ### Snow water equivalent 
@@ -61,3 +61,42 @@ def calc_veg_permittivity_error(canopy_height, temperature_series, timedelta=12)
             veg_phase.append(np.nan)
 
     return [swe_from_phase(phase) for phase in veg_phase]
+
+
+def calc_dry_atmo_error(pressure_series, timedelta=12):
+    dry_atmo_phase = []
+    for i, p2 in enumerate(pressure_series):
+        try:
+            p1 = pressure_series.iloc[i-timedelta]
+            delta_P = p2 - p1
+            dry_atmo_phase.append(float(dry_atmosphere(delta_P_z_from_zref=delta_P)))
+        except IndexError:
+            dry_atmo_phase.append(np.nan)
+
+    return [swe_from_phase(phase) for phase in dry_atmo_phase]
+
+
+def calc_wet_atmo_error(pw_series, timedelta=12):
+    wet_atmo_phase = []
+    for i, pw2 in enumerate(pw_series):
+        try:
+            pw1 = pw_series.iloc[i-timedelta]
+            delta_pw = pw2 - pw1
+            wet_atmo_phase.append(float(precipitable_water(PW=delta_pw)))
+        except IndexError:
+            wet_atmo_phase.append(np.nan)
+
+    return [swe_from_phase(phase) for phase in wet_atmo_phase]
+
+
+def calc_ionosphere_error(tec_series, timedelta=12):
+    ion_phase = []
+    for i, tec2 in enumerate(tec_series):
+        try:
+            tec1 = tec_series.iloc[i-timedelta]
+            delta_tec = tec2 - tec1
+            ion_phase.append(float(ionospheric_advance(delta_TEC=delta_tec)))
+        except IndexError:
+            ion_phase.append(np.nan)
+
+    return [swe_from_phase(phase) for phase in ion_phase]

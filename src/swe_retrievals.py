@@ -99,4 +99,4 @@ def calc_ionosphere_error(tec_series, timedelta=12):
         except IndexError:
             ion_phase.append(np.nan)
 
-    return [swe_from_phase(phase) for phase in ion_phase]
+    return [swe_from_phase(phase)*1e16 for phase in ion_phase]

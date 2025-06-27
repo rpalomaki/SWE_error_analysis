@@ -50,5 +50,5 @@ def compile_timeseries(station_id, time='am'):
 sites = pd.read_csv('/pl/active/palomaki-sar/insar_swe_errors/data/snotel/fig4_sites.csv')
 for station in sites['station_id']:
     for time in ['am','pm']:
-        data = compile_timeseries(station)
+        data = compile_timeseries(station, time=time)
         data.to_csv(f'/pl/active/palomaki-sar/insar_swe_errors/data/compiled/{station}_{time}.csv')

@@ -2,16 +2,31 @@ import pandas as pd
 import xarray as xr
 
 def compile_timeseries(station_id, time='am'):
-    df = pd.read_csv(f'/pl/active/palomaki-sar/insar_swe_errors/data/snotel/hourly/{station_id}_hourly_2016_2025.csv',
-                    index_col=0, parse_dates=True)
-    df.index = df.index.tz_convert('America/Denver').tz_localize(None)
     sites = pd.read_csv('/pl/active/palomaki-sar/insar_swe_errors/data/snotel/fig4_sites.csv')
     site = sites.loc[sites['station_id']==station_id]
+    df = pd.read_csv(f'/pl/active/palomaki-sar/insar_swe_errors/data/snotel/hourly/{station_id}_hourly_2016_2025.csv',
+                    index_col=0, parse_dates=True)
+    df.index = df.index.tz_convert(site['timezone'].values[0]).tz_localize(None)
+    
     
     if time == 'am':
         df_out = pd.DataFrame(df.loc[df.index.hour==6, 'SOIL MOISTURE -2IN'])
     elif time == 'pm':
         df_out = pd.DataFrame(df.loc[df.index.hour==18, 'SOIL MOISTURE -2IN'])
+        
+    for i in df_out.index:
+        if pd.isnull(df_out.loc[i, 'SOIL MOISTURE -2IN']):
+            try:
+                if pd.notnull(df.loc[i-pd.to_timedelta('1h'), 'SOIL MOISTURE -2IN']):
+                    df_out.loc[i, 'SOIL MOISTURE -2IN'] = df.loc[i-pd.to_timedelta('1h'), 'SOIL MOISTURE -2IN']
+            except KeyError:
+                pass
+        if pd.isnull(df_out.loc[i, 'SOIL MOISTURE -2IN']):
+            try:
+                if pd.notnull(df.loc[i+pd.to_timedelta('1h'), 'SOIL MOISTURE -2IN']):
+                    df_out.loc[i, 'SOIL MOISTURE -2IN'] = df.loc[i+pd.to_timedelta('1h'), 'SOIL MOISTURE -2IN']
+            except KeyError:
+                pass
         
     # Keep temp, swe, SM columns from snotel data
     if df.iloc[0]['AIR TEMP_units'] == 'degF':

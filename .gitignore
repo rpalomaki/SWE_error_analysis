@@ -3,3 +3,4 @@ local/
 *wget-log*
 *.DS_store
 *.png
+*.ipynb_checkpoints

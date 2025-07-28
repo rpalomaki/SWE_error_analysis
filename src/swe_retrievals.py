@@ -100,3 +100,16 @@ def calc_ionosphere_error(tec_series, timedelta=12):
             ion_phase.append(np.nan)
 
     return [swe_from_phase(phase)*1e16 for phase in ion_phase]
+
+
+def calc_deformation_error(defo_series, timedelta=12):
+    defo_phase = []
+    for i, r2 in enumerate(defo_series):
+        try:
+            r1 = defo_series.iloc[i-timedelta]
+            delta_r = r2 - r1
+            defo_phase.append(float(land_surface_deformation(delta_R=delta_r)))
+        except IndexError:
+            defo_phase.append(np.nan)
+
+    return [swe_from_phase(phase) for phase in defo_phase]
